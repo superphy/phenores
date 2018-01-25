@@ -46,6 +46,6 @@ PROJECT_DIR = OPJ(os.path.dirname(__file__), os.pardir)
 
 rule mics:
 	input: 
-		"data/raw/GenotypicAMR.xlsx"
+		"data/raw/GenotypicAMR.csv"
 	script:
 		"src/data/bin_mics.py"
