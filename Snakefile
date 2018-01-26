@@ -47,5 +47,7 @@ PROJECT_DIR = OPJ(os.path.dirname(__file__), os.pardir)
 rule mics:
 	input: 
 		"data/raw/GenotypicAMR.csv"
+	output:
+		"data/interim/mic_class_dataframe.pkl", "data/interim/mic_class_order_dict.pkl"
 	script:
 		"src/data/bin_mics.py"
