@@ -44,8 +44,10 @@ def OPJ(*args):
 
 
 rule mics:
-	input:
-		"data/raw/GenotypicAMR.xlsx"
+	input: 
+		"data/raw/GenotypicAMR.csv"
+	output:
+		"data/interim/mic_class_dataframe.pkl", "data/interim/mic_class_order_dict.pkl"
 	script:
 		"src/data/bin_mics.py"
 
