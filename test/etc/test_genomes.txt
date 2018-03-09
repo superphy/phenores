@@ -1,0 +1,3 @@
+test/etc/genome1.fasta
+test/etc/genome2.fasta
+test/etc/genome3.fasta

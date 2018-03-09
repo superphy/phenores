@@ -51,3 +51,46 @@ rule mics:
 		"data/interim/mic_class_dataframe.pkl", "data/interim/mic_class_order_dict.pkl"
 	script:
 		"src/data/bin_mics.py"
+
+
+rule streptofiles:
+	input:
+		"data/raw/GenotypicAMR_Master.xlsx"
+	output:
+		"data/interim/streptomycin_fasta_files.txt"
+	params:
+		fastadir="data/raw/genomes"
+	run:
+		import pandas as pd
+		import numpy as np
+
+		amrdf = pd.read_excel(input[0])
+
+		amrdf = amrdf.replace(r'\s+', np.nan, regex=True)
+		amrdf = amrdf.replace(r'-', np.nan, regex=True)
+
+		sdf = amrdf[['run', 'phenotypic_streptomycin']].dropna()
+
+		with open(output[0], 'w') as outfh:
+			for index, row in sdf.iterrows():
+				filepath = '{}/{}.fasta'.format(params.fastadir,row['run'])
+				if not os.path.exists(filepath):
+					raise Exception('File does not exist: {}'.format(filepath))
+				outfh.write(filepath+"\n")
+
+
+rule streptokmers:
+	input:
+		"data/interim/streptomycin_fasta_files.txt"
+	output:
+		"data/interim/streptomycin_kmers.h5"
+	params:
+		k=31,
+		mins=1,
+		d="data/interim/dsk",
+		cores=8,
+		v=1
+	script: "src/data/make_kmer_table.py"
+	
+
+rule test_streptokmers:
