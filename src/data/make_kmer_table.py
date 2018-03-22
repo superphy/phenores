@@ -6,7 +6,7 @@ Run dsk and save in pytable
 
 """
 
-from kmer import KmerTable
+from kmer import KmerTable, DskCounter
 
 __author__ = "Matthew Whiteside"
 __copyright__ = "Copyright 2018, Public Health Agency of Canada"
@@ -22,14 +22,15 @@ def main():
         '-kmer-size': snakemake.params.k,
         '-nb-cores': snakemake.params.cores,
         '-abundance-min': snakemake.params.mins,
-        '-verbose': snakemake.params.v,
         '-out-dir': snakemake.params.d,
-        '-out-tmp': snakemake.params.d
+        '-out-tmp': snakemake.params.d,
+        '-verbose': snakemake.params.v,
     }
 
-    kmer_table = KmerTable(snakemake.output[0], dsk_opts)
-
-    kmer_table.populate(snakemake.input[0])
+    dc = DskCounter(dsk_opts)
+    kmertable = KmerTable(snakemake.output['dir'], dc)
+    kmertable.enumerate(snakemake.input[0])
+    kmertable.dummy_matrix(snakemake.output['dir'])
     
 
 

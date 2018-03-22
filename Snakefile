@@ -83,14 +83,21 @@ rule streptokmers:
 	input:
 		"data/interim/streptomycin_fasta_files.txt"
 	output:
-		"data/interim/streptomycin_kmers.h5"
+		dir="data/interim/streptomycin/kmers/"
 	params:
 		k=31,
 		mins=1,
-		d="data/interim/dsk",
-		cores=8,
-		v=1
+		v=0,
+		cores=12,
+		d="data/interim/dsk"
 	script: "src/data/make_kmer_table.py"
-	
 
-rule test_streptokmers:
+
+rule streptoclusters:
+	input:
+		dir="data/interim/streptomycin/kmers/"
+	output:
+		"data/interim/streptomycin_clusters.pkl"
+	script: "src/data/make_kmer_groups.py"
+
+
