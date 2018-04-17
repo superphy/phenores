@@ -17,7 +17,8 @@ def OPJ(*args):
 PROJECT_NAME = 'phenores'
 PROJECT_DIR = OPJ(os.path.dirname(__file__), os.pardir)
 FOLDS=range(5)
-DATASETS='gene genome kmer'.split()
+DATASETS='gene genome'.split()
+#DATASETS='gene genome kmer dsm'.split()
 
 #################################################################################
 # RULES                                                                         #
@@ -26,7 +27,7 @@ DATASETS='gene genome kmer'.split()
 rule all:
     input:
         expand("data/interim/treewas/{fold}/tree.nwk", fold=FOLDS),
-        expand(data/interim/treewas/{fold}/{ds}/features.csv", fold=FOLDS, ds=DATASETS)
+        expand("data/interim/treewas/{fold}/{ds}/features.csv", fold=FOLDS, ds=DATASETS)
 
 
 rule binary:
@@ -61,16 +62,70 @@ rule binary:
         genomemat.to_csv(output[1])
 
 
-rule filter_features:
+rule filter_genes:
     # Filter original gene_presence_absence_matrix.csv to include only relevent training genomes
     input:
-        "data/interim/roary/gene_presence_absence_matrix.csv",
-        "data/interim/roary/gene_and_igr_presence_absence_matrix.csv",
+        "data/interim/roary/gene_presence_absence_matrix.csv"
     output:
-        expand("data/interim/treewas/{fold}/gene/features.csv", fold=FOLDS),
+        expand("data/interim/treewas/{fold}/gene/features.csv", fold=FOLDS)
+    run:
+        from Bio import SeqIO
+        import pandas as pd
+        import numpy as np
+        import os
+
+        # Load groups
+        df = pd.read_csv(input[0], sep=',', header=0, index_col=0)
+
+        trainingset = {}
+        for r in df.itertuples():
+            g = r.sample
+            ts = r.fold//2
+            trainingset[g] = ts
+
+        # Open files for writing
+        with ExitStack() as stack:
+            files = [stack.enter_context(open(fname, 'w')) for fname in output]
+
+            with open(input[0], 'r') as infh:
+                for line in infh:
+                    sample = line.split(',', 1)[0]
+                    ds = trainingset[sample]
+                    fh = files[int(ds)]
+                    fh.write(line)
+
+
+rule filter_genomes:
+    # Filter original gene_presence_absence_matrix.csv to include only relevent training genomes
+    input:
+        "data/interim/roary/gene_and_igr_presence_absence_matrix.csv"
+    output:
         expand("data/interim/treewas/{fold}/genome/features.csv", fold=FOLDS)
+    run:
+        from Bio import SeqIO
+        import pandas as pd
+        import numpy as np
+        import os
 
+        # Load groups
+        df = pd.read_csv(input[0], sep=',', header=0, index_col=0)
 
+        trainingset = {}
+        for r in df.itertuples():
+            g = r.sample
+            ts = r.fold//2
+            trainingset[g] = ts
+
+        # Open files for writing
+        with ExitStack() as stack:
+            files = [stack.enter_context(open(fname, 'w')) for fname in output]
+
+            with open(input[0], 'r') as infh:
+                for line in infh:
+                    sample = line.split(',', 1)[0]
+                    ds = trainingset[sample]
+                    fh = files[int(ds)]
+                    fh.write(line)
 
 
 rule filter_aln:
