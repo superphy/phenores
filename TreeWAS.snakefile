@@ -26,8 +26,7 @@ DATASETS='gene genome'.split()
 
 rule all:
     input:
-        expand("data/interim/treewas/{fold}/tree.nwk", fold=FOLDS),
-        expand("data/interim/treewas/{fold}/{ds}/features.csv", fold=FOLDS, ds=DATASETS)
+        expand("data/interim/treewas/{fold}/{ds}/treewas_results.rdata", fold=FOLDS, ds=DATASETS)
 
 
 rule binary:
@@ -65,6 +64,7 @@ rule binary:
 rule filter_genes:
     # Filter original gene_presence_absence_matrix.csv to include only relevent training genomes
     input:
+        "data/interim/streptomycin_population_groups.csv",
         "data/interim/roary/gene_presence_absence_matrix.csv"
     output:
         expand("data/interim/treewas/{fold}/gene/features.csv", fold=FOLDS)
@@ -87,7 +87,7 @@ rule filter_genes:
         with ExitStack() as stack:
             files = [stack.enter_context(open(fname, 'w')) for fname in output]
 
-            with open(input[0], 'r') as infh:
+            with open(input[1], 'r') as infh:
                 for line in infh:
                     sample = line.split(',', 1)[0]
                     ds = trainingset[sample]
@@ -98,6 +98,7 @@ rule filter_genes:
 rule filter_genomes:
     # Filter original gene_presence_absence_matrix.csv to include only relevent training genomes
     input:
+        "data/interim/streptomycin_population_groups.csv",
         "data/interim/roary/gene_and_igr_presence_absence_matrix.csv"
     output:
         expand("data/interim/treewas/{fold}/genome/features.csv", fold=FOLDS)
@@ -120,12 +121,45 @@ rule filter_genomes:
         with ExitStack() as stack:
             files = [stack.enter_context(open(fname, 'w')) for fname in output]
 
-            with open(input[0], 'r') as infh:
+            with open(input[1], 'r') as infh:
                 for line in infh:
                     sample = line.split(',', 1)[0]
                     ds = trainingset[sample]
                     fh = files[int(ds)]
                     fh.write(line)
+
+
+rule filter_pheno:
+    # Filter original resistance phenotype data to include only relevent training genomes
+    input:
+        "data/interim/streptomycin_population_groups.csv"
+    output:
+        expand("data/interim/treewas/{fold}/phenotypes.csv", fold=FOLDS)
+    run:
+        from Bio import SeqIO
+        import pandas as pd
+        import numpy as np
+        import os
+
+        # Load groups
+        df = pd.read_csv(input[0], sep=',', header=0, index_col=0)
+
+        trainingset = {}
+        pheno = {}
+        for r in df.itertuples():
+            g = r.sample
+            ts = r.fold//2
+            trainingset[g] = ts
+            pheno[g] = r.resistant
+
+        # Open files for writing
+        with ExitStack() as stack:
+            files = [stack.enter_context(open(fname, 'w')) for fname in output]
+
+            for g in trainingset:
+                ds = int(trainingset[g])
+                fh = files[ds]
+                fh.write("{},{}".format(g, pheno[g]))
 
 
 rule filter_aln:
@@ -184,13 +218,27 @@ rule tree:
 rule treewas_genes:
     # Run treewas with gene presence / absence run
     input:
-        "data/interim/roary/gene_presence_absence_matrix.csv",
-        "data/interim/streptomycin_population_groups.csv",
+        "data/interim/treewas/{fold}/gene/features.csv",
+        "data/interim/treewas/{fold}/phenotypes.csv",
         "data/interim/treewas/{fold}/tree.nwk"
     output:
-        "data/interim/treewas/{fold}/treewas_results.rdata",
-        "data/interim/treewas/{fold}/treewas_plots.pdf"
-    script: "src/gwas/run_treewas.R"
+        "data/interim/treewas/{fold}/gene/treewas_results.rdata",
+        "data/interim/treewas/{fold}/gene/treewas_plots.pdf"
+    script: 
+        "src/gwas/run_treewas.R"
+
+
+rule treewas_genomes:
+    # Run treewas with gene presence / absence run
+    input:
+        "data/interim/treewas/{fold}/genome/features.csv",
+        "data/interim/treewas/{fold}/phenotypes.csv",
+        "data/interim/treewas/{fold}/tree.nwk"
+    output:
+        "data/interim/treewas/{fold}/genome/treewas_results.rdata",
+        "data/interim/treewas/{fold}/genome/treewas_plots.pdf"
+    script: 
+        "src/gwas/run_treewas.R"
 
 
         
