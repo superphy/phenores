@@ -20,7 +20,7 @@ FOLDS=range(5)
 DATASETS='gene genome'.split()
 #DATASETS='gene genome kmer dsm'.split()
 METADATAFILE="data/interim/streptomycin_population_groups.csv"
-METADATAFILE="data/interim/test_pop.csv"
+#METADATAFILE="data/interim/test_pop.csv"
 
 
 #################################################################################
