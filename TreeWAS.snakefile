@@ -37,10 +37,10 @@ rule binary:
     input:
         METADATAFILE,
         "data/interim/roary/gene_presence_absence.csv",
-        #"data/interim/roary/IGR_presence_absence.csv",
+        "data/interim/roary/IGR_presence_absence.csv",
     output:
         "data/interim/roary/gene_presence_absence_matrix.csv",
-        #"data/interim/roary/gene_and_igr_presence_absence_matrix.csv",
+        "data/interim/roary/gene_and_igr_presence_absence_matrix.csv",
     run:
         import pandas as pd
 
@@ -53,14 +53,14 @@ rule binary:
         genemat = genemat.applymap(lambda x: 0 if pd.isna(x) else 1)
         genemat = genemat.T
 
-        # igrmat = igrdf[sampledf["sample"]]
-        # igrmat = igrmat.applymap(lambda x: 0 if pd.isna(x) else 1)
-        # igrmat = igrmat.T
+        igrmat = igrdf[sampledf["sample"]]
+        igrmat = igrmat.applymap(lambda x: 0 if pd.isna(x) else 1)
+        igrmat = igrmat.T
 
-        #genomemat = pd.concat([genemat, igrmat], axis=1)
+        genomemat = pd.concat([genemat, igrmat], axis=1)
 
         genemat.to_csv(output[0])
-        #genomemat.to_csv(output[1])
+        genomemat.to_csv(output[1])
 
 
 rule filter_genes:
