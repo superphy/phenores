@@ -8,16 +8,16 @@
     "tree" :
     {
         "time" : "24:00:00",
-        "mem": "24G"
+        "mem": "24000"
     },
     "treewas_gene" :
     {
         "time" : "24:00:00",
-        "mem": "24G"
+        "mem": "24000"
     },
     "treewas_genome" :
     {
         "time" : "24:00:00",
-        "mem": "24G"
+        "mem": "24000"
     }
 }
