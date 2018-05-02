@@ -13,11 +13,11 @@
     "treewas_genes" :
     {
         "time" : "24:00:00",
-        "mem": "24000"
+        "mem": "30000"
     },
     "treewas_genomes" :
     {
         "time" : "24:00:00",
-        "mem": "24000"
+        "mem": "30000"
     }
 }
