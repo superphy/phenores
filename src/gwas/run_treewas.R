@@ -46,7 +46,7 @@ pheno <- phenodf[['resistant']]
 names(pheno) = phenodf[['sample']]
 featuredt <- fread(feature_file, header=TRUE, sep=',')
 featuremat <- as.matrix(featuredt[,-1,with=FALSE])
-rownames(featuremat) <- featuredt[,1]
+rownames(featuremat) <- featuredt[,1][[1]]
 tree <- loadTree(tree_file)
 
 out <- treeWAS(featuremat, pheno, tree, filename.plot = plot_file)

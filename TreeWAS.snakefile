@@ -19,6 +19,9 @@ PROJECT_DIR = OPJ(os.path.dirname(__file__), os.pardir)
 FOLDS=range(5)
 DATASETS='gene genome'.split()
 #DATASETS='gene genome kmer dsm'.split()
+METADATAFILE="data/interim/streptomycin_population_groups.csv"
+METADATAFILE="data/interim/test_pop.csv"
+
 
 #################################################################################
 # RULES                                                                         #
@@ -32,18 +35,17 @@ rule all:
 rule binary:
     # Convert roary/piggy outputs to binary matrix
     input:
-        "data/interim/streptomycin_population_groups.csv",
+        METADATAFILE,
         "data/interim/roary/gene_presence_absence.csv",
-        "data/interim/roary/IGR_presence_absence.csv",
+        #"data/interim/roary/IGR_presence_absence.csv",
     output:
         "data/interim/roary/gene_presence_absence_matrix.csv",
-        "data/interim/roary/gene_and_igr_presence_absence_matrix.csv",
+        #"data/interim/roary/gene_and_igr_presence_absence_matrix.csv",
     run:
         import pandas as pd
 
         # Rtabs in Piggy are missing cluster names, so we will do it the hard way
         genedf = pd.read_csv(input[1], sep=',', header=0, index_col=0, na_values="", dtype=str)
-        inputs = "../data/interim/roary/IGR_presence_absence.csv"
         igrdf = pd.read_csv(input[2], sep=',', header=0, index_col=0, na_values="", dtype=str)
         sampledf = pd.read_csv(input[0], sep=',', header=0, index_col=0)
 
@@ -51,25 +53,26 @@ rule binary:
         genemat = genemat.applymap(lambda x: 0 if pd.isna(x) else 1)
         genemat = genemat.T
 
-        igrmat = igrdf[sampledf["sample"]]
-        igrmat = igrmat.applymap(lambda x: 0 if pd.isna(x) else 1)
-        igrmat = igrmat.T
+        # igrmat = igrdf[sampledf["sample"]]
+        # igrmat = igrmat.applymap(lambda x: 0 if pd.isna(x) else 1)
+        # igrmat = igrmat.T
 
-        genomemat = pd.concat([genemat, igrmat], axis=1)
+        #genomemat = pd.concat([genemat, igrmat], axis=1)
 
         genemat.to_csv(output[0])
-        genomemat.to_csv(output[1])
+        #genomemat.to_csv(output[1])
 
 
 rule filter_genes:
     # Filter original gene_presence_absence_matrix.csv to include only relevent training genomes
     input:
-        "data/interim/streptomycin_population_groups.csv",
+        METADATAFILE,
         "data/interim/roary/gene_presence_absence_matrix.csv"
     output:
         expand("data/interim/treewas/{fold}/gene/features.csv", fold=FOLDS)
     run:
         from Bio import SeqIO
+        from contextlib import ExitStack
         import pandas as pd
         import numpy as np
         import os
@@ -88,22 +91,32 @@ rule filter_genes:
             files = [stack.enter_context(open(fname, 'w')) for fname in output]
 
             with open(input[1], 'r') as infh:
+                # Add headers
+                header = infh.readline()
+                for fh in files:
+                    fh.write(header)
+
+                # Add rest to correct file
                 for line in infh:
                     sample = line.split(',', 1)[0]
-                    ds = trainingset[sample]
-                    fh = files[int(ds)]
-                    fh.write(line)
+                    if sample in trainingset:
+                        ds = trainingset[sample]
+                        for i in FOLDS:
+                            if i != ds:
+                                fh = files[i]
+                                fh.write(line)
 
 
 rule filter_genomes:
     # Filter original gene_presence_absence_matrix.csv to include only relevent training genomes
     input:
-        "data/interim/streptomycin_population_groups.csv",
+        METADATAFILE,
         "data/interim/roary/gene_and_igr_presence_absence_matrix.csv"
     output:
         expand("data/interim/treewas/{fold}/genome/features.csv", fold=FOLDS)
     run:
         from Bio import SeqIO
+        from contextlib import ExitStack
         import pandas as pd
         import numpy as np
         import os
@@ -122,21 +135,31 @@ rule filter_genomes:
             files = [stack.enter_context(open(fname, 'w')) for fname in output]
 
             with open(input[1], 'r') as infh:
+                # Add headers
+                header = infh.readline()
+                for fh in files:
+                    fh.write(header)
+
+                # Add rest to correct file
                 for line in infh:
                     sample = line.split(',', 1)[0]
-                    ds = trainingset[sample]
-                    fh = files[int(ds)]
-                    fh.write(line)
+                    if sample in trainingset:
+                        ds = trainingset[sample]
+                        for i in FOLDS:
+                            if i != ds:
+                                fh = files[i]
+                                fh.write(line)
 
 
 rule filter_pheno:
     # Filter original resistance phenotype data to include only relevent training genomes
     input:
-        "data/interim/streptomycin_population_groups.csv"
+        METADATAFILE,
     output:
         expand("data/interim/treewas/{fold}/phenotypes.csv", fold=FOLDS)
     run:
         from Bio import SeqIO
+        from contextlib import ExitStack
         import pandas as pd
         import numpy as np
         import os
@@ -156,16 +179,21 @@ rule filter_pheno:
         with ExitStack() as stack:
             files = [stack.enter_context(open(fname, 'w')) for fname in output]
 
+            for fh in files:
+                fh.write("sample,resistant\n")
+
             for g in trainingset:
                 ds = int(trainingset[g])
-                fh = files[ds]
-                fh.write("{},{}".format(g, pheno[g]))
+                for i in FOLDS:
+                    if i != ds:
+                        fh = files[i]
+                        fh.write("{},{}\n".format(g, pheno[g]))        
 
 
 rule filter_aln:
     # Filter original core_gene_alignment.aln to include only relevent training genomes
     input: 
-        "data/interim/streptomycin_population_groups.csv",
+        METADATAFILE,
         "data/interim/roary/core_gene_alignment.aln"
     output: 
         expand("data/interim/treewas/{fold}/train_core.aln", fold=FOLDS)
@@ -213,6 +241,16 @@ rule tree:
         "data/interim/treewas/{fold}/tree.nwk"
     shell:
         "FastTree -gtr -nt -nosupport -fastest -noml {input} > {output}"
+
+
+# rule tree:
+#     # Build phylogenetic tree 
+#     input:
+#        "data/interim/treewas/{fold}/train_core.aln"
+#     output:
+#         "data/interim/treewas/{fold}/tree.nwk"
+#     shell:
+#         "clearcut -k --DNA --alignment --in={input} --out={output}"
 
 
 rule treewas_genes:
