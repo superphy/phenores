@@ -259,6 +259,8 @@ rule treewas_genes:
         "data/interim/treewas/{fold}/gene/features.csv",
         "data/interim/treewas/{fold}/phenotypes.csv",
         "data/interim/treewas/{fold}/tree.nwk"
+    params:
+        mem=48
     output:
         "data/interim/treewas/{fold}/gene/treewas_results.rdata",
         "data/interim/treewas/{fold}/gene/treewas_plots.pdf"
@@ -271,7 +273,9 @@ rule treewas_genomes:
     input:
         "data/interim/treewas/{fold}/genome/features.csv",
         "data/interim/treewas/{fold}/phenotypes.csv",
-        "data/interim/treewas/{fold}/tree.nwk"
+        "data/interim/treewas/{fold}/tree.nwk",
+    params:
+        mem=48
     output:
         "data/interim/treewas/{fold}/genome/treewas_results.rdata",
         "data/interim/treewas/{fold}/genome/treewas_plots.pdf"
