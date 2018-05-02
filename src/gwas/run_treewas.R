@@ -41,7 +41,7 @@ loadTree <- function(treefile, do.root=FALSE, resolve.polytomies=TRUE) {
 	tree
 }
 
-phenodf <- read.table(pheno_file, header=TRUE, sep=',', as.is=TRUE, row.names=1)[c('sample','resistant')]
+phenodf <- read.table(pheno_file, header=TRUE, sep=',', as.is=TRUE)[c('sample','resistant')]
 pheno <- phenodf[['resistant']]
 names(pheno) = phenodf[['sample']]
 featuredt <- fread(feature_file, header=TRUE, sep=',')
