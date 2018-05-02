@@ -10,12 +10,12 @@
         "time" : "24:00:00",
         "mem": "24000"
     },
-    "treewas_gene" :
+    "treewas_genes" :
     {
         "time" : "24:00:00",
         "mem": "24000"
     },
-    "treewas_genome" :
+    "treewas_genomes" :
     {
         "time" : "24:00:00",
         "mem": "24000"

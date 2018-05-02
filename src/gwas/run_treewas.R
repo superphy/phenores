@@ -36,7 +36,7 @@ loadTree <- function(treefile, do.root=FALSE, resolve.polytomies=TRUE) {
 		tree <- multi2di(tree,random=TRUE)
 	}
 	# Replace all zero length edges with a small value
-	tree$edge.length[tree$edge.length < 1e-7] <- 1e-7
+	tree$edge.length[tree$edge.length < 1e-10] <- 1e-10
 
 	tree
 }
