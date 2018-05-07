@@ -80,6 +80,15 @@ rule dsm_build:
     shell:
         "{params.cmd} -v {input}"
 
+
+rule dsm_client:
+    input:
+        "data/interim/dsm/streptomycin/{genome}.fasta.fmi",
+        "data/interim/dsm/streptomycin/server_config/metaserver_config.txt"
+    output:
+        
+
+
 # NEED TO RUN THIS OUTSIDE OF A SNAKEMAKE FILE
 # IT is already a dispatching script.
 #rule dsm_run:

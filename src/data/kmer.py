@@ -287,7 +287,7 @@ class KmerTable:
 
             # Save new data point
             indexrow = indextable.row
-            indexrow['row'] = genome_idx
+            indexrow['row'] = genome_id
             indexrow['col'] = kmer_idx
             indexrow.append()
 
@@ -487,9 +487,6 @@ class KmerTable:
             print(r)
             
             
-
-        
-     
 
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'

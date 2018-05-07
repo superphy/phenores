@@ -90,7 +90,7 @@ rule streptokmers:
     output:
         dir="data/interim/streptomycin/kmers/"
     params:
-        k=31,
+        k=11,
         mins=1,
         v=0,
         cores=12,

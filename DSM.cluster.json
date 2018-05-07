@@ -2,12 +2,14 @@
     "__default__" :
     {
         "time" : "00:5:00",
-        "n" : 1,
-        "mem" : 1000
+        "mem-per-cpu" : 1000
     },
     "dsm_build" :
     {
         "time" : "00:10:00",
-        "mem": 2000
     }
+    "dsm_client": {
+        "time" : "00:20:00",
+    }
+
 }

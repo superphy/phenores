@@ -39,8 +39,8 @@ rule binary:
         "data/interim/roary/gene_presence_absence.csv",
         "data/interim/roary/IGR_presence_absence.csv",
     output:
-        "data/interim/roary/gene_presence_absence_matrix.csv",
-        "data/interim/roary/gene_and_igr_presence_absence_matrix.csv",
+        "data/interim/roary/gene_presence_absence_matrix.tsv",
+        "data/interim/roary/gene_and_igr_presence_absence_matrix.tsv",
     run:
         import pandas as pd
 
@@ -59,8 +59,8 @@ rule binary:
 
         genomemat = pd.concat([genemat, igrmat], axis=1)
 
-        genemat.to_csv(output[0])
-        genomemat.to_csv(output[1])
+        genemat.to_csv(output[0], sep='\t')
+        genomemat.to_csv(output[1], sep='\t')
 
 
 rule filter_genes:
@@ -69,7 +69,7 @@ rule filter_genes:
         METADATAFILE,
         "data/interim/roary/gene_presence_absence_matrix.csv"
     output:
-        expand("data/interim/treewas/{fold}/gene/features.csv", fold=FOLDS)
+        expand("data/interim/cv/{fold}/gene/features.tsv", fold=FOLDS)
     run:
         from Bio import SeqIO
         from contextlib import ExitStack
@@ -98,7 +98,7 @@ rule filter_genes:
 
                 # Add rest to correct file
                 for line in infh:
-                    sample = line.split(',', 1)[0]
+                    sample = line.split('\t', 1)[0]
                     if sample in trainingset:
                         ds = trainingset[sample]
                         for i in FOLDS:
@@ -113,7 +113,7 @@ rule filter_genomes:
         METADATAFILE,
         "data/interim/roary/gene_and_igr_presence_absence_matrix.csv"
     output:
-        expand("data/interim/treewas/{fold}/genome/features.csv", fold=FOLDS)
+        expand("data/interim/cv/{fold}/genome/features.tsv", fold=FOLDS)
     run:
         from Bio import SeqIO
         from contextlib import ExitStack
@@ -142,7 +142,7 @@ rule filter_genomes:
 
                 # Add rest to correct file
                 for line in infh:
-                    sample = line.split(',', 1)[0]
+                    sample = line.split('\t', 1)[0]
                     if sample in trainingset:
                         ds = trainingset[sample]
                         for i in FOLDS:
@@ -156,7 +156,7 @@ rule filter_pheno:
     input:
         METADATAFILE,
     output:
-        expand("data/interim/treewas/{fold}/phenotypes.csv", fold=FOLDS)
+        expand("data/interim/cv/{fold}/phenotypes.tsv", fold=FOLDS)
     run:
         from Bio import SeqIO
         from contextlib import ExitStack
@@ -180,14 +180,14 @@ rule filter_pheno:
             files = [stack.enter_context(open(fname, 'w')) for fname in output]
 
             for fh in files:
-                fh.write("sample,resistant\n")
+                fh.write("sample\tresistant\n")
 
             for g in trainingset:
                 ds = int(trainingset[g])
                 for i in FOLDS:
                     if i != ds:
                         fh = files[i]
-                        fh.write("{},{}\n".format(g, pheno[g]))        
+                        fh.write("{}\t{}\n".format(g, pheno[g]))        
 
 
 rule filter_aln:
@@ -256,14 +256,14 @@ rule tree:
 rule treewas_genes:
     # Run treewas with gene presence / absence run
     input:
-        "data/interim/treewas/{fold}/gene/features.csv",
-        "data/interim/treewas/{fold}/phenotypes.csv",
-        "data/interim/treewas/{fold}/tree.nwk"
+        "data/interim/cv/{fold}/gene/features.csv",
+        "data/interim/cv/{fold}/phenotypes.csv",
+        "data/interim/cv/{fold}/tree.nwk"
     params:
         mem=48
     output:
-        "data/interim/treewas/{fold}/gene/treewas_results.rdata",
-        "data/interim/treewas/{fold}/gene/treewas_plots.pdf"
+        "data/interim/cv/{fold}/gene/treewas/treewas_results.rdata",
+        "data/interim/cv/{fold}/gene/treewas/treewas_plots.pdf"
     script: 
         "src/gwas/run_treewas.R"
 
@@ -271,14 +271,14 @@ rule treewas_genes:
 rule treewas_genomes:
     # Run treewas with gene presence / absence run
     input:
-        "data/interim/treewas/{fold}/genome/features.csv",
-        "data/interim/treewas/{fold}/phenotypes.csv",
-        "data/interim/treewas/{fold}/tree.nwk",
+        "data/interim/cv/{fold}/genome/features.csv",
+        "data/interim/cv/{fold}/phenotypes.csv",
+        "data/interim/cv/{fold}/tree.nwk",
     params:
         mem=48
     output:
-        "data/interim/treewas/{fold}/genome/treewas_results.rdata",
-        "data/interim/treewas/{fold}/genome/treewas_plots.pdf"
+        "data/interim/cv/{fold}/genome/treewas/treewas_results.rdata",
+        "data/interim/cv/{fold}/genome/treewas/treewas_plots.pdf"
     script: 
         "src/gwas/run_treewas.R"
 
