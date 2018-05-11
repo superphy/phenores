@@ -50,7 +50,9 @@ rule filter:
         "data/interim/streptomycin/kmers/kmer_matrix.txt"
     run:
         import zarr
+        import pandas as pd
         import dask.array as da
+        import dask.dataframe as dd
         import numpy as np
 
         store = zarr.DirectoryStore(input[0])
@@ -59,23 +61,19 @@ rule filter:
 
         a = da.from_array(za, chunks=za.chunks)
 
-        # Filter by counts
-        frequencies = a.sum(axis=0).compute()
-        mask = (frequencies > 14) & (frequencies < 1392)
-        a = a[:,mask]
+        with dask.set_options(scheduler='threads'):
 
-        # Filter by patterns
+            # Filter by counts
+            frequencies = a.sum(axis=0)
+            mask = (frequencies > 14) & (frequencies < 1392)
+            a = a[:,mask]
+
+            df = dd.from_array(a.compute())
+            df.to_csv()
+            
+
+
         
-        # Lets hash the columns using some random values
-        nrow = a.shape[0]
-        samples = [ np.random.randint(nrow, size=50) for i in range(10) ]
-
-        def hashfunc(a):
-            hasharr = [ str(np.sum(a[s])) for s in samples ]
-            hasharr.append(str(np.sum(a)))
-            return ''.join(hasharr)
-
-        hashstrs = np.apply_along_axis(hashfunc, 0, a)
 
 
 
