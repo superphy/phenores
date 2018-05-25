@@ -144,7 +144,7 @@ class MICPanel:
         bottom_mgpl = MGPL(bottom)
         bottom_label = str(bottom_mgpl)
         if bottom_mgpl.isna or not bottom_label in self.lookup:
-            raise ValueError('Invalid max MICPanel value {}'.format(bottom))
+            raise ValueError('Invalid min MICPanel value {}'.format(bottom))
         bottom_i = self.lookup[str(bottom_mgpl)]
 
         invalid_label = 'invalid'
@@ -293,6 +293,8 @@ class MGPL:
             (sign(string), value(float))
         """
 
+        mic = mic.replace(' mg/L', '')
+
         if mic == '-' or mic == 'NA':
             return (None, None, True)
         elif isinstance(mic, int):
@@ -301,10 +303,12 @@ class MGPL:
             return ('=', mic, False)
         elif isinstance(mic, str):
             sign = '='
-            match = re.search(r'^(?P<sign>=|>=|<=|>|<)?\s*(?P<value>\d*\.\d+|\d+)', mic)
+            match = re.search(r'^(?P<sign>=|>=|<=|>|<|==)?\s*(?P<value>\d*\.\d+|\d+)', mic)
             if match:
                 if match.group('sign'):
                     sign = match.group('sign')
+                    if sign == '==':
+                        sign = '='
 
                 if match.group('value'):
                     value = float(match.group('value'))
