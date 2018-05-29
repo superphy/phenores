@@ -293,8 +293,6 @@ class MGPL:
             (sign(string), value(float))
         """
 
-        mic = mic.replace(' mg/L', '')
-
         if mic == '-' or mic == 'NA':
             return (None, None, True)
         elif isinstance(mic, int):
@@ -302,6 +300,7 @@ class MGPL:
         elif isinstance(mic, float):
             return ('=', mic, False)
         elif isinstance(mic, str):
+            mic = mic.replace(' mg/L', '')
             sign = '='
             match = re.search(r'^(?P<sign>=|>=|<=|>|<|==)?\s*(?P<value>\d*\.\d+|\d+)', mic)
             if match:

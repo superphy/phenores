@@ -24,15 +24,16 @@ FOLDS=range(5)
 
 rule all:
     input:
-        "data/interim/str_mic_class_dataframe.pkl", 
-        "data/interim/str_mic_class_order_dict.pkl"
+        "data/interim/mic_class_dataframe2.pkl", 
+        "data/interim/mic_class_order_dict2.pkl"
 
 rule mics:
     input: 
-        "data/raw/GenotypicAMR_Master.csv"
+        "data/raw/GenotypicAMR_Master.xlsx"
     output:
-        "data/interim/str_mic_class_dataframe.pkl", "data/interim/str_mic_class_order_dict.pkl"
+        "data/interim/mic_class_dataframe2.pkl", 
+        "data/interim/mic_class_order_dict2.pkl"
     script:
-        "src/data/bin_str_mics.py"
+        "src/data/bin_mics.py"
 
 

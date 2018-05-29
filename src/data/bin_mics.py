@@ -93,11 +93,15 @@ def main(excel_filepath):
     logger = logging.getLogger(__name__)
     logger.info('MIC binning')
 
-    drugs = ["MIC_AMP", "MIC_AMC", "MIC_FOX", "MIC_CRO", "MIC_TIO", "MIC_GEN",
-        "MIC_FIS", "MIC_SXT", "MIC_AZM", "MIC_CHL", "MIC_CIP", "MIC_NAL", "MIC_TET"]
-    convert = { key: lambda x: str(x) for key in drugs }
+    # drugs = ["MIC_AMP", "MIC_AMC", "MIC_FOX", "MIC_CRO", "MIC_TIO", "MIC_GEN",
+    #     "MIC_FIS", "MIC_SXT", "MIC_AZM", "MIC_CHL", "MIC_CIP", "MIC_NAL", "MIC_TET"]
+    # convert = { key: lambda x: str(x) for key in drugs }
    
-    micsdf = pd.read_csv(excel_filepath, sep='\t', usecols=['run'] + drugs, skip_footer=1, skip_blank_lines=False, converters=convert)
+    # micsdf = pd.read_csv(excel_filepath, sep='\t', usecols=['run'] + drugs, skip_footer=1, skip_blank_lines=False, converters=convert)
+    # micsdf = micsdf.set_index('run')
+
+    micsdf = pd.read_excel(excel_filepath)
+    micsdf = micsdf[["run","MIC_AMP", "MIC_AMC", "MIC_FOX", "MIC_CRO", "MIC_TIO", "MIC_GEN", "MIC_FIS", "MIC_SXT", "MIC_AZM", "MIC_CHL", "MIC_CIP", "MIC_NAL", "MIC_TET"]]
     micsdf = micsdf.set_index('run')
     
     classes = {}
@@ -113,9 +117,8 @@ def main(excel_filepath):
 
     c = pd.DataFrame(classes)
 
-    data_dir = os.environ.get('PRDATA')
-    cfile = os.path.join(data_dir, 'interim', 'mic_class_dataframe.pkl')
-    cofile = os.path.join(data_dir, 'interim', 'mic_class_order_dict.pkl')
+    cfile = snakemake.output[0]
+    cofile = snakemake.output[1]
     joblib.dump(c, cfile)
     joblib.dump(class_orders, cofile)
 
