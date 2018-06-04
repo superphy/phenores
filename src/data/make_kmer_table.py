@@ -28,7 +28,7 @@ def main():
     }
 
     dc = DskCounter(dsk_opts)
-    kmertable = KmerTable(snakemake.output['dir'], dc)
+    kmertable = KmerTable(snakemake.output[0], snakemake.output[1], dc)
     kmertable.enumerate(snakemake.input[0]) 
 
 

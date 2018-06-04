@@ -122,16 +122,12 @@ class KmerTable:
 
     """
 
-    def __init__(self, storage_dir, counter_object):
+    def __init__(self, zarr_storage_dir, leveldb_storage_dir, counter_object):
 
         self.counter = counter_object
 
-        # Create storage location
-        if not os.path.exists(storage_dir):
-            os.makedirs(storage_dir)
-
-        self.leveldb_filepath = os.path.join(storage_dir, 'kmer_index_leveldb')
-        self.zarr_filepath = os.path.join(storage_dir, 'kmer_ohe_zarr')
+        self.leveldb_filepath = leveldb_storage_dir
+        self.zarr_filepath = zarr_storage_dir
 
         self._tmp_kmer_counter = 0
         self._tmp_genome_counter = 0
