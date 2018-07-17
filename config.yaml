@@ -1,0 +1,5 @@
+k: 7 # The length of kmer to count
+l: 13 # The Minimum frequency for a kmer to be
+train_size: 0.8
+genome_header: run
+MIC_header: MIC_AMP

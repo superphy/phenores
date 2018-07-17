@@ -76,7 +76,11 @@ target/
 .ipynb_checkpoints/
 
 # exclude data from source control by default
+<<<<<<< HEAD
 data
+=======
+/data/
+>>>>>>> c126e4b763dc64a3959fda7222ce862ca2cf2943
 
 # Snakemake
 .snakemake

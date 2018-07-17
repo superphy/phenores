@@ -102,6 +102,7 @@ def main(excel_filepath):
 
     micsdf = pd.read_excel(excel_filepath)
     micsdf = micsdf[["run","MIC_AMP", "MIC_AMC", "MIC_FOX", "MIC_CRO", "MIC_TIO", "MIC_GEN", "MIC_FIS", "MIC_SXT", "MIC_AZM", "MIC_CHL", "MIC_CIP", "MIC_NAL", "MIC_TET"]]
+
     micsdf = micsdf.set_index('run')
     
     classes = {}
