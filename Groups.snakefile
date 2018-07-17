@@ -5,10 +5,6 @@ import os
 # FUNCTIONS                                                                     #
 #################################################################################
 
-def OPJ(*args):
-    path = os.path.join(*args)
-    return os.path.normpath(path)
-
 
 #################################################################################
 # GLOBALS                                                                       #
@@ -42,8 +38,12 @@ rule str_files:
         amrdf = amrdf.replace(r'-', np.nan, regex=True)
 
         # Drop Ecoli & friends
-        amrdf = amrdf[amrdf['spcecies'] == 'enterica',:]
+        correct_species = np.where(amrdf['spcecies'] == 'enterica')[0]
+        print(correct_species.shape)
+        amrdf = amrdf.loc[correct_species,:]
+        print(amrdf.shape)
         sdf = amrdf[['run', 'phenotypic_streptomycin']].dropna()
+        print(sdf.shape)
 
         with open(output[0], 'w') as outfh:
             for index, row in sdf.iterrows():

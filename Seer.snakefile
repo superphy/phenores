@@ -80,13 +80,7 @@ rule gzip:
 		"""
 
 
-# rule filter_strings:
-# 	#
-# 	input:
-# 		"data/interim/fsmlite/streptomycin_kmers.txt"
-# 	output:
-#         expand("data/interim/seer/{fold}/strings/features.txt", fold=FOLDS)
-# 	run:
+
 
 
 
