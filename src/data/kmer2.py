@@ -80,7 +80,7 @@ class DskRunner:
         with open(self.kmer_file, encoding='utf-8') as file:
             for line in file:
                 (kmerstr, freq) = line.split()
-                yield kmerstr.encode()
+                yield (kmerstr.encode(), freq)
 
 
     def close(self):
@@ -100,7 +100,7 @@ class DskCounter:
     def __init__(self, counter_opts):
 
         dsk_defaults = {
-            '-kmer-size': 31,
+            '-kmer-size': 11,
             '-nb-core': 1,
             '-out-tmp': '/tmp',
             '-out-dir': '/tmp',
@@ -203,7 +203,8 @@ class KmerTable:
         
         i = 0
         colbuffer = []
-        for kmerbstr in iterkmers:
+        countbuffer = []
+        for kmerbstr, count in iterkmers:
 
             t0 = time.time()
 
@@ -230,11 +231,12 @@ class KmerTable:
 
             # Save new data point
             colbuffer.append(kmer_idx)
+            countbuffer.append(count)
 
             if len(colbuffer) >= tmp_n:
                 s = len(colbuffer)
                 try:
-                    za.set_coordinate_selection(([genome_idx]*s, colbuffer), [1]*s)
+                    za.set_coordinate_selection(([genome_idx]*s, colbuffer), countbuffer)
                 except IndexError:
                     mx = za.shape[1]
                     print("shape: {},{}".format(za.shape[0],za.shape[1]))
@@ -242,6 +244,7 @@ class KmerTable:
                     print("overages colbuffer:\n{}\n".format(', '.join([str(c) for c in colbuffer if c >= mx ])))
                     raise
                 colbuffer = []
+                countbuffer = []
 
             t3 = time.time()
 
