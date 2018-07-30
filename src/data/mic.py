@@ -29,7 +29,12 @@ class MICPanel:
     def __init__(self):
 
        self.panel = []
+       self.invalids = []
 
+
+    @property
+    def invalid_label(self):
+        return('invalid')
 
     @property
     def size(self):
@@ -87,11 +92,13 @@ class MICPanel:
 
         self.panel = micvals
         self.lookup = { str(val): idx for idx, val in enumerate(self.panel) }
+        self.class_labels = [ str(c) for c in self.panel ]
+        self.top_mgpl = micvals[-1]
+        self.bottom_mgpl = micvals[0]
 
-        values = [ str(c) for c in self.panel ]
-        counts = [ record[c] for c in values ]
+        counts = [ record[c] for c in self.class_labels ]
 
-        return (values, counts)
+        return (self.class_labels, counts)
 
 
     def find(self, m):
@@ -116,6 +123,62 @@ class MICPanel:
             return (self.lookup[mgpl], False)
         else:
             return (-1, False)
+
+
+    def transform(self, m):
+        """Return transformed MIC bin label
+
+        Unlike regular 'find', if top value is has > symbol, and m is > than top value,
+        method will return top value index, rather than -1.
+
+        Similarly for the bottom value.
+
+        Args:
+            m(str|int|float): MIC value, e.g. >=32, 2.0, <0.1
+
+        Returns:
+            list
+                index(int): None if not found, or MIC bin string
+                isna(bool):  True if MIC is a missing value e.g. '-' or 'NA'
+
+        """
+
+        # Convert to consistent representation
+        try:
+            mgpl = MGPL(m)
+        except ValueError as err:
+            raise Exception('Unrecognized MIC format in element {}, {}.\n\t({})'.format(i, m, err))
+        mlabel = str(mgpl)
+
+        if mlabel == 'NA':
+            return (None, True)
+        if mlabel in self.lookup:
+            return (mlabel, False)
+        else:
+            # Encountered unrecognized MIC label
+
+            # Is this greater than the top label?
+            if self.top_mgpl.sign == '>=' or self.top_mgpl.sign == '>':
+                if (mgpl.sign != '<' or mgpl.sign != '<=') and mgpl.raw >= self.top_mgpl.raw:
+                    return (str(self.top_mgpl), False)
+                else:
+                    warnings.warn('Unknown MIC value: {}. Assigning as invalid'.format(m))
+                    self.invalids.append(mlabel)
+                    return (self.invalid_label, False)
+            # Or less than bottom label?
+            elif self.bottom_mgpl.sign == '<=' or self.bottom_mgpl.sign == '<':
+                if (mgpl.sign != '>' or mgpl.sign != '>=') and mgpl.raw <= self.bottom_mgpl.raw:
+                    return (str(self.bottom_mgpl), False)
+                else:
+                    warnings.warn('Unknown MIC value: {}. Assigning as invalid'.format(m))
+                    self.invalids.append(mlabel)
+                    return (self.invalid_label, False)
+            else:
+                # Something in between
+                warnings.warn('Unknown MIC value: {}. Assigning as invalid'.format(m))
+                self.invalids.append(mlabel)
+                return(self.invalid_label, False)
+
 
 
     def set_range(self, top, bottom):
@@ -147,7 +210,7 @@ class MICPanel:
             raise ValueError('Invalid min MICPanel value {}'.format(bottom))
         bottom_i = self.lookup[str(bottom_mgpl)]
 
-        invalid_label = 'invalid'
+
         self.class_mapping = {}
         self.class_labels = [bottom_label]
 
@@ -164,7 +227,7 @@ class MICPanel:
             else:
                 if m.sign != '=':
                     # Internal range
-                    self.class_mapping[mgpl] = invalid_label
+                    self.class_mapping[mgpl] = self.invalid_label
                 else:
                     if top_mgpl.sign == '>=' and m.raw == top_mgpl.raw:
                         self.class_mapping[mgpl] = top_label
@@ -175,8 +238,8 @@ class MICPanel:
                         self.class_labels.append(mgpl)
 
         self.class_labels.append(top_label)
-        
 
+        
 
 class MGPL:
     """MGPL Class

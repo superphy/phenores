@@ -11,6 +11,7 @@ import os
 import logging
 import numpy as np
 import pandas as pd
+import yaml
 
 from dotenv import find_dotenv, load_dotenv
 from sklearn.externals import joblib
@@ -82,35 +83,67 @@ mic_ranges = {
 }
 
 
-def main(excel_filepath):
+def main(excel_filepath, class_label_filepath=None):
     """ Runs data processing scripts to turn MIC text values from Excel input data
         into class categories
 
+        There are two modes
+            1. Only max and min are defined, all other observed MIC classes are assigned a bin provided
+            they are not incompatible (i.e. >8 in a panel where the MIC values range from 1 - 32)
+            2. All class labels are defined, observed MIC classes in data are mapped to these classes. An error
+            is thrown if no mapped classes is found. To use this version, provde a class_label_filepath above.
+            The class_label file will outline all classes in YAML format:
+
+
+                AMP:
+                    - 0.5
+                    - 1.0
+                    - 2.0
+                    - ...
+
+                - or -
+
+                AMP: [0.5, 1.0, 2.0, ...]
+
+
     Args:
         excel_filepath: Metadata Excel file. MIC columns will have prefix 'MIC_'
+        class_label_filepath: If this is provided, the class labels will be loaded, instead of inferred from data
 
     """
+
     logger = logging.getLogger(__name__)
     logger.info('MIC binning')
 
-    # drugs = ["MIC_AMP", "MIC_AMC", "MIC_FOX", "MIC_CRO", "MIC_TIO", "MIC_GEN",
-    #     "MIC_FIS", "MIC_SXT", "MIC_AZM", "MIC_CHL", "MIC_CIP", "MIC_NAL", "MIC_TET"]
-    # convert = { key: lambda x: str(x) for key in drugs }
-   
-    # micsdf = pd.read_csv(excel_filepath, sep='\t', usecols=['run'] + drugs, skip_footer=1, skip_blank_lines=False, converters=convert)
-    # micsdf = micsdf.set_index('run')
-
     micsdf = pd.read_excel(excel_filepath)
-    micsdf = micsdf[["run","MIC_AMP", "MIC_AMC", "MIC_FOX", "MIC_CRO", "MIC_TIO", "MIC_GEN", "MIC_FIS", "MIC_SXT", "MIC_AZM", "MIC_CHL", "MIC_CIP", "MIC_NAL", "MIC_TET"]]
+    micsdf = micsdf[["run","MIC_AMP"]]
+
+    # micsdf = micsdf[
+    #     ["run", "MIC_AMP", "MIC_AMC", "MIC_FOX", "MIC_CRO", "MIC_TIO", "MIC_GEN", "MIC_FIS", "MIC_SXT", "MIC_AZM",
+    #      "MIC_CHL", "MIC_CIP", "MIC_NAL", "MIC_TET"]]
 
     micsdf = micsdf.set_index('run')
-    
+
+    mic_class_labels = None
+    if class_label_filepath:
+        logger.debug('Using classes defined in {}'.format(class_label_filepath))
+        with open(class_label_filepath, 'r') as infh:
+            mic_class_labels = yaml.load(infh)
+
+
+
+    print("<{}>".format(mic_class_labels))
+
     classes = {}
     class_orders = {}
     for col in micsdf:
         logger.debug('Creating MIC panel for {}'.format(col))
-        class_labels, class_order = bin(micsdf[col], col)
         drug = col.replace('MIC_', '')
+        if mic_class_labels:
+            class_labels, class_order = transform(micsdf[col], mic_class_labels[drug])
+        else:
+            class_labels, class_order = bin(micsdf[col], col)
+
         classes[drug] = pd.Series(class_labels, index=micsdf.index)
         class_orders[drug] = class_order
 
@@ -151,7 +184,7 @@ def bin(mic_series, drug):
             classes.append(np.nan)
         else:
             if not mlabel in panel.class_mapping:
-                raise Exception('Mapping error')
+                raise Exception('Mapping error: class {} not found in MIC panel.'.format(mlabel))
             else:
                 classes.append(panel.class_mapping[mlabel])
 
@@ -159,6 +192,29 @@ def bin(mic_series, drug):
     return(classes, panel.class_labels)
 
 
+def transform(mic_series, class_labels):
+
+    logger = logging.getLogger(__name__)
+
+    panel = MICPanel()
+
+    # Initialize MIC bins
+    panel.build(class_labels)
+
+    # Iterate through MIC values and assign class labels
+    logger.debug('MIC values will be mapped to: {}'.format(panel.class_labels))
+    classes = []
+    for m in mic_series:
+        mlabel, isna = panel.transform(m)
+
+        if isna:
+            classes.append(np.nan)
+        else:
+            classes.append(mlabel)
+
+    logger.info("Invalid MICs found in dataset: {}".format(', '.join(panel.invalids)))
+
+    return (classes, panel.class_labels)
 
 
 if __name__ == '__main__':
@@ -169,4 +225,9 @@ if __name__ == '__main__':
     project_dir = os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
     load_dotenv(find_dotenv())
 
-    main(snakemake.input[0])
+    # Check for class file
+    clfp = None
+    if snakemake.params.class_labels:
+        clfp = snakemake.params.class_labels
+
+    main(snakemake.input[0], clfp)
