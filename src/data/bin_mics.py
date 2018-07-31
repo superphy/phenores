@@ -116,11 +116,10 @@ def main(excel_filepath, class_label_filepath=None):
     logger.info('MIC binning')
 
     micsdf = pd.read_excel(excel_filepath)
-    micsdf = micsdf[["run","MIC_AMP"]]
 
-    # micsdf = micsdf[
-    #     ["run", "MIC_AMP", "MIC_AMC", "MIC_FOX", "MIC_CRO", "MIC_TIO", "MIC_GEN", "MIC_FIS", "MIC_SXT", "MIC_AZM",
-    #      "MIC_CHL", "MIC_CIP", "MIC_NAL", "MIC_TET"]]
+    micsdf = micsdf[
+        ["run", "MIC_AMP", "MIC_AMC", "MIC_FOX", "MIC_CRO", "MIC_TIO", "MIC_GEN", "MIC_FIS", "MIC_SXT", "MIC_AZM",
+         "MIC_CHL", "MIC_CIP", "MIC_NAL", "MIC_TET"]]
 
     micsdf = micsdf.set_index('run')
 
@@ -129,10 +128,6 @@ def main(excel_filepath, class_label_filepath=None):
         logger.debug('Using classes defined in {}'.format(class_label_filepath))
         with open(class_label_filepath, 'r') as infh:
             mic_class_labels = yaml.load(infh)
-
-
-
-    print("<{}>".format(mic_class_labels))
 
     classes = {}
     class_orders = {}
