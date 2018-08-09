@@ -147,7 +147,10 @@ class MICPanel:
         try:
             mgpl = MGPL(m)
         except ValueError as err:
-            raise Exception('Unrecognized MIC format in element {}.\n\t({})'.format(m, err))
+            mlabel = str(m)
+            warnings.warn('Unrecognized MIC format: {}. Assigning as invalid'.format(mlabel))
+            self.invalids.append(mlabel)
+            return (self.invalid_label, False)
         mlabel = str(mgpl)
 
         if mlabel == 'NA':
@@ -158,21 +161,17 @@ class MICPanel:
             # Encountered unrecognized MIC label
 
             # Is this greater than the top label?
-            if self.top_mgpl.sign == '>=' or self.top_mgpl.sign == '>':
-                if (mgpl.sign != '<' or mgpl.sign != '<=') and mgpl.raw >= self.top_mgpl.raw:
-                    return (str(self.top_mgpl), False)
-                else:
-                    warnings.warn('Unknown MIC value: {}. Assigning as invalid'.format(m))
-                    self.invalids.append(mlabel)
-                    return (self.invalid_label, False)
+            if (self.top_mgpl.sign == '>=' or self.top_mgpl.sign == '>') and mgpl > self.top_mgpl:
+                return (str(self.top_mgpl), False)
             # Or less than bottom label?
-            elif self.bottom_mgpl.sign == '<=' or self.bottom_mgpl.sign == '<':
-                if (mgpl.sign != '>' or mgpl.sign != '>=') and mgpl.raw <= self.bottom_mgpl.raw:
-                    return (str(self.bottom_mgpl), False)
-                else:
-                    warnings.warn('Unknown MIC value: {}. Assigning as invalid'.format(m))
-                    self.invalids.append(mlabel)
-                    return (self.invalid_label, False)
+            elif (self.bottom_mgpl.sign == '<=' or self.bottom_mgpl.sign == '<') and mgpl < self.bottom_mgpl:
+                return (str(self.bottom_mgpl), False)
+            # Or equal to top label?
+            elif self.top_mgpl.sign == '>=' and self.top_mgpl.raw == mgpl.raw:
+                return (str(self.top_mgpl), False)
+            # Or equal to bottom label?
+            elif self.bottom_mgpl.sign == '<=' and self.bottom_mgpl.raw == mgpl.raw:
+                return (str(self.bottom_mgpl), False)
             else:
                 # Something in between
                 warnings.warn('Unknown MIC value: {}. Assigning as invalid'.format(m))

@@ -121,7 +121,9 @@ def main(excel_filepath, class_label_filepath=None):
         ["run", "MIC_AMP", "MIC_AMC", "MIC_FOX", "MIC_CRO", "MIC_TIO", "MIC_GEN", "MIC_FIS", "MIC_SXT", "MIC_AZM",
          "MIC_CHL", "MIC_CIP", "MIC_NAL", "MIC_TET"]]
 
-    micsdf = micsdf.set_index('run')
+    # micsdf = micsdf[
+    #     ["SANumber", "MIC_AMP", "MIC_AMC"]]
+    # micsdf = micsdf.set_index('SANumber')
 
     mic_class_labels = None
     if class_label_filepath:
@@ -199,7 +201,9 @@ def transform(mic_series, class_labels):
     # Iterate through MIC values and assign class labels
     logger.debug('MIC values will be mapped to: {}'.format(panel.class_labels))
     classes = []
+    i = 0
     for m in mic_series:
+        i += 1
         mlabel, isna = panel.transform(m)
 
         if isna:

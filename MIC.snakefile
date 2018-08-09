@@ -20,7 +20,7 @@ rule all:
 
 rule mics:
     input: 
-        "data/raw/Updated_GenotypicAMR_Master.xlsx"
+        "data/raw/GenotypicAMR_Master.xlsx"
     output:
         "data/interim/mic_class_dataframe2.pkl", 
         "data/interim/mic_class_order_dict2.pkl"
@@ -29,7 +29,7 @@ rule mics:
 
 rule test:
     input:
-        "data/raw/Updated_GenotypicAMR_Master.xlsx"
+        "data/raw/ResolvedCIPARS_SRL (1).xlsx"
     output:
         "data/interim/mic_class_dataframe_test.pkl",
         "data/interim/mic_class_order_dict_test.pkl"
