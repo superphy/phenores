@@ -147,7 +147,7 @@ class MICPanel:
         try:
             mgpl = MGPL(m)
         except ValueError as err:
-            raise Exception('Unrecognized MIC format in element {}, {}.\n\t({})'.format(i, m, err))
+            raise Exception('Unrecognized MIC format in element {}.\n\t({})'.format(m, err))
         mlabel = str(mgpl)
 
         if mlabel == 'NA':

@@ -222,7 +222,7 @@ if __name__ == '__main__':
 
     # Check for class file
     clfp = None
-    if snakemake.params.class_labels:
+    if hasattr(snakemake.params, 'class_labels') and snakemake.params.class_labels:
         clfp = snakemake.params.class_labels
 
     main(snakemake.input[0], clfp)
