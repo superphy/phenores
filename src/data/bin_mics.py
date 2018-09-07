@@ -1,29 +1,4 @@
-#!/usr/bin/env python
 
-"""bin_mics.py
-
-Convert MIC values into distinct classes. Save processed
-classes as pandas dataframes.
-
-"""
-
-import os
-import logging
-import numpy as np
-import pandas as pd
-import yaml
-
-from dotenv import find_dotenv, load_dotenv
-from sklearn.externals import joblib
-
-from mic import MICPanel, MGPL
-
-__author__ = "Matthew Whiteside"
-__copyright__ = "Copyright 2018, Public Health Agency of Canada"
-__license__ = "APL"
-__version__ = "2.0"
-__maintainer__ = "Matthew Whiteside"
-__email__ = "matthew.whiteside@phac-aspc.gc.ca"
 
 # Manually define MIC ranges due to mixing of different systems
 mic_ranges = {
