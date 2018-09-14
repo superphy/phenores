@@ -10,7 +10,7 @@
 #################################################################################
 
 def get_fasta(fl):
-    
+
 fasta_files = expand(shell("grep -v '^#' data/interim/fasta_files_list_no_ecoli.txt"))
 
 
