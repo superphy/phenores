@@ -134,7 +134,7 @@ class MICPanel:
         Similarly for the bottom value.
 
         Args:
-            m(str|int|float): MIC value, e.g. >=32, 2.0, <0.1
+            m: MGPL object
 
         Returns:
             list
@@ -179,7 +179,7 @@ class MICPanel:
                 return(self.invalid_label, False)
 
 
-    def map(self, m):
+    def map(self, mgpl):
         """Return transformed MIC bin label
 
         Unlike regular 'find', if top value has > symbol, and m is > than top value,
@@ -191,7 +191,7 @@ class MICPanel:
         MIC between top and bottom values will be returned.
 
         Args:
-            m(str|int|float): MIC value, e.g. >=32, 2.0, <0.1
+            mgpl: MGPL object
 
         Returns:
             list
@@ -201,13 +201,7 @@ class MICPanel:
         """
 
         # Convert to consistent representation
-        try:
-            mgpl = MGPL(m)
-        except ValueError as err:
-            mlabel = str(m)
-            warnings.warn('Unrecognized MIC format: {}. Assigning as invalid'.format(mlabel))
-            self.invalids.append(mlabel)
-            return (self.invalid_label, False)
+
         mlabel = str(mgpl)
 
         if mlabel == 'NA':
@@ -221,23 +215,27 @@ class MICPanel:
             # Or less than bottom label?
             elif (self.bottom_mgpl.sign == '<=' or self.bottom_mgpl.sign == '<') and mgpl < self.bottom_mgpl:
                 return (str(self.bottom_mgpl), False)
-            # Or equal to top label?
+            # Or overlap with top label?
             elif self.top_mgpl.sign == '>=' and self.top_mgpl.raw == mgpl.raw:
                 return (str(self.top_mgpl), False)
-            # Or equal to bottom label?
+            # Or overlap bottom label?
             elif self.bottom_mgpl.sign == '<=' and self.bottom_mgpl.raw == mgpl.raw:
+                return (str(self.bottom_mgpl), False)
+            # Or equal to top label?
+            elif self.top_mgpl == mgpl:
+                return (str(self.top_mgpl), False)
+            # Or equal to bottom label?
+            elif self.bottom_mgpl == mgpl:
                 return (str(self.bottom_mgpl), False)
             else:
                 # Something in between
 
-                if m.sign != '=':
+                if mgpl.sign != '=':
                     # In the internal range, all MICs must be specific values and not range symbols (i.e. >32)
                     return (self.invalid_label, False)
                 else:
                     # Specific value between max and min
                     return (mlabel, False)
-
-
 
 
     def set_range(self, top, bottom):
@@ -277,7 +275,6 @@ class MICPanel:
 
         for m in self.panel:
             mgpl = str(m)
-
             mlabel, isna = self.map(m)
             if not isna:
                 if not mlabel in self.class_labels:

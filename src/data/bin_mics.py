@@ -1,3 +1,20 @@
+import os
+import logging
+import re
+import numpy as np
+import pandas as pd
+
+from dotenv import find_dotenv, load_dotenv
+from sklearn.externals import joblib
+
+from mic import MICPanel, MGPL
+
+__author__ = "Matthew Whiteside"
+__copyright__ = "Copyright 2018, Public Health Agency of Canada"
+__license__ = "APL"
+__version__ = "2.0"
+__maintainer__ = "Matthew Whiteside"
+__email__ = "matthew.whiteside@phac-aspc.gc.ca"
 
 
 # Manually define MIC ranges due to mixing of different systems
@@ -96,9 +113,10 @@ def main(excel_filepath, class_label_filepath=None):
         ["run", "MIC_AMP", "MIC_AMC", "MIC_FOX", "MIC_CRO", "MIC_TIO", "MIC_GEN", "MIC_FIS", "MIC_SXT", "MIC_AZM",
          "MIC_CHL", "MIC_CIP", "MIC_NAL", "MIC_TET"]]
 
+    micsdf = micsdf.set_index('run')
+
     # micsdf = micsdf[
     #     ["SANumber", "MIC_AMP", "MIC_AMC"]]
-    # micsdf = micsdf.set_index('SANumber')
 
     mic_class_labels = None
     if class_label_filepath:
@@ -143,8 +161,10 @@ def bin(mic_series, drug):
 
 
     # Initialize MIC bins
-    panel.set_range(mic_ranges[drug]['top'], mic_ranges[drug]['bottom'])
 
+    panel.set_range(mic_ranges[drug]['top'], mic_ranges[drug]['bottom'])
+    logger.debug('Top MIC range: {}'.format(mic_ranges[drug]['top']))
+    logger.debug('Bottom MIC range: {}'.format(mic_ranges[drug]['bottom']))
     # Iterate through MIC values and assign class labels
     logger.debug('MIC values will be mapped to: {}'.format(panel.class_labels))
     classes = []
